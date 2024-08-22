@@ -4384,6 +4384,30 @@ MOSTLYCLEANFILES += split_s390_z1 split_s390_z2 split_s390_z3 \
 
 endif DEFAULT_TARGET_S390
 
+check_SCRIPTS += memory_seal_test.sh
+check_DATA += memory_seal_test_1.stdout memory_seal_test_2.stdout \
+	      memory_seal_test_3.stdout memory_seal_test_4.stdout
+MOSTLYCLEANFILES += memory_seal_test
+memory_seal_test_1.stdout: memory_seal_main_1
+	$(TEST_READELF) -n $< >$@
+memory_seal_test_2.stdout: memory_seal_shared_1.so
+	$(TEST_READELF) -n $< >$@
+memory_seal_test_3.stdout: memory_seal_main_2
+	$(TEST_READELF) -n $< >$@
+memory_seal_test_4.stdout: memory_seal_shared_2.so
+	$(TEST_READELF) -n $< >$@
+memory_seal_main_1: gcctestdir/ld memory_seal_main.o property_seal_1.o
+	gcctestdir/ld -o $@ memory_seal_main.o
+memory_seal_main_2: gcctestdir/ld memory_seal_main.o property_seal_1.o
+	gcctestdir/ld -z memory-seal -o $@ memory_seal_main.o property_seal_1.o
+memory_seal_shared_1.so: gcctestdir/ld memory_seal_shared.o property_seal_1.o
+	gcctestdir/ld -shared -o $@ memory_seal_shared.o
+memory_seal_shared_2.so: gcctestdir/ld memory_seal_shared.o property_seal_1.o
+	gcctestdir/ld -zmemory-seal -shared -o $@ memory_seal_shared.o property_seal_1.o
+property_seal_1.o: property_seal_1.S
+	$(COMPILE) -c -o $@ $<
+
+
 endif NATIVE_OR_CROSS_LINKER
 
 # Tests for the dwp tool.

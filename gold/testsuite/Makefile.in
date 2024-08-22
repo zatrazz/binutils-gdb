@@ -1138,11 +1138,16 @@ check_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 @DEFAULT_TARGET_S390_TRUE@@NATIVE_OR_CROSS_LINKER_TRUE@	split_s390x_z1_ns split_s390x_z2_ns split_s390x_z3_ns \
 @DEFAULT_TARGET_S390_TRUE@@NATIVE_OR_CROSS_LINKER_TRUE@	split_s390x_z4_ns split_s390x_n1_ns split_s390x_n2_ns split_s390x_r
 
-@DEFAULT_TARGET_X86_64_TRUE@am__append_121 = *.dwo *.dwp pr26936a \
+@NATIVE_OR_CROSS_LINKER_TRUE@am__append_121 = memory_seal_test.sh
+@NATIVE_OR_CROSS_LINKER_TRUE@am__append_122 = memory_seal_test_1.stdout memory_seal_test_2.stdout \
+@NATIVE_OR_CROSS_LINKER_TRUE@	      memory_seal_test_3.stdout memory_seal_test_4.stdout
+
+@NATIVE_OR_CROSS_LINKER_TRUE@am__append_123 = memory_seal_test
+@DEFAULT_TARGET_X86_64_TRUE@am__append_124 = *.dwo *.dwp pr26936a \
 @DEFAULT_TARGET_X86_64_TRUE@	pr26936b retain_1 retain_2
-@DEFAULT_TARGET_X86_64_TRUE@am__append_122 = dwp_test_1.sh \
+@DEFAULT_TARGET_X86_64_TRUE@am__append_125 = dwp_test_1.sh \
 @DEFAULT_TARGET_X86_64_TRUE@	dwp_test_2.sh pr26936.sh retain.sh
-@DEFAULT_TARGET_X86_64_TRUE@am__append_123 = dwp_test_1.stdout \
+@DEFAULT_TARGET_X86_64_TRUE@am__append_126 = dwp_test_1.stdout \
 @DEFAULT_TARGET_X86_64_TRUE@	dwp_test_2.stdout pr26936a.stdout \
 @DEFAULT_TARGET_X86_64_TRUE@	pr26936b.stdout retain_1.out \
 @DEFAULT_TARGET_X86_64_TRUE@	retain_2.out
@@ -2888,7 +2893,7 @@ MOSTLYCLEANFILES = *.so *.syms *.stdout *.stderr $(am__append_4) \
 	$(am__append_88) $(am__append_91) $(am__append_93) \
 	$(am__append_102) $(am__append_105) $(am__append_108) \
 	$(am__append_111) $(am__append_114) $(am__append_117) \
-	$(am__append_120) $(am__append_121)
+	$(am__append_120) $(am__append_123) $(am__append_124)
 
 # We will add to these later, for each individual test.  Note
 # that we add each test under check_SCRIPTS or check_PROGRAMS;
@@ -2901,7 +2906,7 @@ check_SCRIPTS = $(am__append_2) $(am__append_21) $(am__append_25) \
 	$(am__append_89) $(am__append_96) $(am__append_100) \
 	$(am__append_103) $(am__append_106) $(am__append_109) \
 	$(am__append_112) $(am__append_115) $(am__append_118) \
-	$(am__append_122)
+	$(am__append_121) $(am__append_125)
 check_DATA = $(am__append_3) $(am__append_22) $(am__append_26) \
 	$(am__append_32) $(am__append_38) $(am__append_45) \
 	$(am__append_50) $(am__append_54) $(am__append_58) \
@@ -2910,7 +2915,7 @@ check_DATA = $(am__append_3) $(am__append_22) $(am__append_26) \
 	$(am__append_90) $(am__append_97) $(am__append_101) \
 	$(am__append_104) $(am__append_107) $(am__append_110) \
 	$(am__append_113) $(am__append_116) $(am__append_119) \
-	$(am__append_123)
+	$(am__append_122) $(am__append_126)
 BUILT_SOURCES = $(am__append_42)
 TESTS = $(check_SCRIPTS) $(check_PROGRAMS)
 
@@ -6492,6 +6497,13 @@ aarch64_tlsdesc.sh.log: aarch64_tlsdesc.sh
 split_s390.sh.log: split_s390.sh
 	@p='split_s390.sh'; \
 	b='split_s390.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memory_seal_test.sh.log: memory_seal_test.sh
+	@p='memory_seal_test.sh'; \
+	b='memory_seal_test.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -10454,6 +10466,24 @@ uninstall-am:
 @DEFAULT_TARGET_S390_TRUE@@NATIVE_OR_CROSS_LINKER_TRUE@	$(TEST_OBJDUMP) -d $< > $@
 @DEFAULT_TARGET_S390_TRUE@@NATIVE_OR_CROSS_LINKER_TRUE@split_s390x_r.stdout: split_s390x_1_z1.o split_s390x_2_ns.o ../ld-new
 @DEFAULT_TARGET_S390_TRUE@@NATIVE_OR_CROSS_LINKER_TRUE@	../ld-new -r split_s390x_1_z1.o split_s390x_2_ns.o -o split_s390x_r > $@ 2>&1 || exit 0
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_test_1.stdout: memory_seal_main_1
+@NATIVE_OR_CROSS_LINKER_TRUE@	$(TEST_READELF) -n $< >$@
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_test_2.stdout: memory_seal_shared_1.so
+@NATIVE_OR_CROSS_LINKER_TRUE@	$(TEST_READELF) -n $< >$@
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_test_3.stdout: memory_seal_main_2
+@NATIVE_OR_CROSS_LINKER_TRUE@	$(TEST_READELF) -n $< >$@
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_test_4.stdout: memory_seal_shared_2.so
+@NATIVE_OR_CROSS_LINKER_TRUE@	$(TEST_READELF) -n $< >$@
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_main_1: gcctestdir/ld memory_seal_main.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@	gcctestdir/ld -o $@ memory_seal_main.o
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_main_2: gcctestdir/ld memory_seal_main.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@	gcctestdir/ld -z memory-seal -o $@ memory_seal_main.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_shared_1.so: gcctestdir/ld memory_seal_shared.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@	gcctestdir/ld -shared -o $@ memory_seal_shared.o
+@NATIVE_OR_CROSS_LINKER_TRUE@memory_seal_shared_2.so: gcctestdir/ld memory_seal_shared.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@	gcctestdir/ld -zmemory-seal -shared -o $@ memory_seal_shared.o property_seal_1.o
+@NATIVE_OR_CROSS_LINKER_TRUE@property_seal_1.o: property_seal_1.S
+@NATIVE_OR_CROSS_LINKER_TRUE@	$(COMPILE) -c -o $@ $<
 
 # Tests for the dwp tool.
 # We don't want to rely yet on GCC support for -gsplit-dwarf,

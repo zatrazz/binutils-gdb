@@ -38,6 +38,7 @@ static aarch64_protection_opts sw_protections = {
   .plt_type = PLT_NORMAL,
   .bti_report = MARKING_WARN,
   .gcs_type = GCS_IMPLICIT,
+  .gcs_mode = GCS_MODE_NONE,
   .gcs_report = MARKING_UNSET,
   .gcs_report_dynamic = MARKING_UNSET,
 };
@@ -448,6 +449,30 @@ aarch64_parse_gcs_option (const char *_optarg)
 }
 
 static bool
+aarch64_parse_gcs_mode (const char *_optarg)
+{
+  #define GCS_MODE       "gcs-mode"
+  #define GCS_MODE_LEN   COMPILE_TIME_STRLEN (GCS_MODE)
+
+  if (strncmp (_optarg, GCS_MODE, GCS_MODE_LEN) != 0)
+    return false;
+
+  if (strcmp (_optarg + GCS_MODE_LEN, "=none") == 0)
+    sw_protections.gcs_mode = GCS_MODE_NONE;
+  else if (strcmp (_optarg + GCS_MODE_LEN, "=optional") == 0)
+    sw_protections.gcs_mode = GCS_MODE_OPTIONAL;
+  else if (strcmp (_optarg + GCS_MODE_LEN, "=enforced") == 0)
+    sw_protections.gcs_mode = GCS_MODE_ENFORCE;
+  else
+    einfo (_("%X%P: error: unrecognized value '-z %s'\n"), _optarg);
+
+  return true;
+
+  #undef GCS_MODE
+  #undef GCS_MODE_LEN
+}
+
+static bool
 aarch64_parse_memtag_mode_option (const char *_optarg)
 {
   #define MEMTAG_MODE      "memtag-mode"
@@ -551,6 +576,13 @@ PARSE_AND_LIST_OPTIONS='
                                                  and output have GCS marking.\n\
                                                error: Emit error when the input objects are missing GCS markings\n\
                                                  and output have GCS marking.\n"));
+
+  fprintf (file, _("\
+  -z gcs-mode=optional|enforced     Control how the Guarded Control Stack (GCS) should be enforced.\n\
+                                      implicit (default if '\''-z gcs'\'' is set): GCS is disabled\n\
+                                      optional: check markings but keep GCS off if any binary is unmarked.\n\
+                                      enforced: check markings and abort if any binary is not marked.\n"));
+
   fprintf (file, _("\
   -z memtag-mode[=none|sync|async]     Select Memory Tagging Extension mode of operation to use.\n\
                                        Emits a DT_AARCH64_MEMTAG_MODE dynamic tag for the binary.\n\
@@ -574,6 +606,8 @@ PARSE_AND_LIST_ARGS_CASE_Z_AARCH64='
      else if (aarch64_parse_gcs_report_dynamic_option (optarg))
 	{}
      else if (aarch64_parse_gcs_report_option (optarg))
+	{}
+     else if (aarch64_parse_gcs_mode (optarg))
 	{}
      else if (aarch64_parse_gcs_option (optarg))
 	{}

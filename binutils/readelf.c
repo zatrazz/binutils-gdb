@@ -22392,6 +22392,23 @@ decode_aarch64_feature_1_and (unsigned int bitmask)
 }
 
 static void
+decode_aarch64_gcs_mode (unsigned int value)
+{
+  switch (value)
+    {
+    case GNU_PROPERTY_AARCH64_GCS_MODE_NONE:
+      printf ("none");
+      break;
+    case GNU_PROPERTY_AARCH64_GCS_MODE_OPTIONAL:
+      printf ("optional");
+      break;
+    case GNU_PROPERTY_AARCH64_GCS_MODE_ENFORCE:
+      printf ("enforced");
+      break;
+    }
+}
+
+static void
 decode_riscv_feature_1_and (unsigned int bitmask)
 {
   while (bitmask)
@@ -22605,6 +22622,15 @@ print_gnu_property_note (Filedata * filedata, Elf_Internal_Note * pnote)
 		    printf (_("<corrupt length: %#x> "), datasz);
 		  else
 		    decode_aarch64_feature_1_and (byte_get (ptr, 4));
+		  goto next;
+		}
+	      else if (type == GNU_PROPERTY_AARCH64_GCS_MODE)
+		{
+		  printf ("AArch64 GCS mode: ");
+		  if (datasz != 4)
+		    printf (_("<corrupt length: %#x> "), datasz);
+		  else
+		    decode_aarch64_gcs_mode (byte_get (ptr, 4));
 		  goto next;
 		}
 	    }

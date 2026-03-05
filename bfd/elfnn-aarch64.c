@@ -2625,6 +2625,8 @@ struct elf_aarch64_link_hash_table
   /* Memtag Extension mode of operation.  */
   aarch64_memtag_opts memtag_opts;
 
+  aarch64_gcs_mode_type gcs_mode;
+
   /* The number of bytes in the initial entry in the PLT.  */
   bfd_size_type plt_header_size;
 
@@ -5048,6 +5050,7 @@ bfd_elfNN_aarch64_set_options (struct bfd *output_bfd,
   uint32_t gnu_property_aarch64_feature_1_and = 0;
   aarch64_feature_marking_report gcs_report;
   aarch64_feature_marking_report gcs_report_dynamic;
+  uint32_t gnu_property_aarch64_gcs_mode = 0;
 
   if (sw_protections->plt_type & PLT_BTI)
     {
@@ -5120,6 +5123,24 @@ bfd_elfNN_aarch64_set_options (struct bfd *output_bfd,
       abort ();
     }
 
+  switch (sw_protections->gcs_mode)
+    {
+    case GCS_MODE_NONE:
+      break;
+
+    case GCS_MODE_OPTIONAL:
+      gnu_property_aarch64_gcs_mode = GNU_PROPERTY_AARCH64_GCS_MODE_OPTIONAL;
+      break;
+
+    case GCS_MODE_ENFORCE:
+      gnu_property_aarch64_gcs_mode = GNU_PROPERTY_AARCH64_GCS_MODE_ENFORCE;
+      break;
+
+    default:
+      /* Unknown GCS mode type.  */
+      abort ();
+    }
+
   if (attrs_subsection->size > 0)
     LINKED_LIST_APPEND (obj_attr_subsection_v2_t)
       (&elf_obj_attr_subsections (output_bfd), attrs_subsection);
@@ -5128,6 +5149,9 @@ bfd_elfNN_aarch64_set_options (struct bfd *output_bfd,
 
   elf_aarch64_tdata (output_bfd)->gnu_property_aarch64_feature_1_and
     = gnu_property_aarch64_feature_1_and;
+
+  elf_aarch64_tdata (output_bfd)->gnu_property_aarch64_gcs_mode
+    = gnu_property_aarch64_gcs_mode;
 
   elf_aarch64_tdata (output_bfd)->sw_protections = *sw_protections;
   /* Adjusting GCS diagnostic levels.  */

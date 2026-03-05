@@ -66,6 +66,13 @@ typedef enum
   GCS_ALWAYS	= 2,  /* gsc is enabled on output.  */
 } aarch64_gcs_type;
 
+typedef enum
+{
+  GCS_MODE_NONE       = 0,
+  GCS_MODE_OPTIONAL   = 1,
+  GCS_MODE_ENFORCE    = 2,
+} aarch64_gcs_mode_type;
+
 /* A structure to encompass all information about software protections coming
    from BTI, PAC and GCS related command line options.  */
 struct aarch64_protection_opts
@@ -78,6 +85,8 @@ struct aarch64_protection_opts
 
   /* Look-up mode for GCS property.  */
   aarch64_gcs_type gcs_type;
+
+  aarch64_gcs_mode_type gcs_mode;
 
   /* Report level for GCS issues.  */
   aarch64_feature_marking_report gcs_report;
@@ -103,6 +112,8 @@ struct elf_aarch64_obj_tdata
 
   /* All GNU_PROPERTY_AARCH64_FEATURE_1_AND properties.  */
   uint32_t gnu_property_aarch64_feature_1_and;
+
+  uint32_t gnu_property_aarch64_gcs_mode;
 
   /* Software protections options.  */
   struct aarch64_protection_opts sw_protections;

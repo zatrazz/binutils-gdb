@@ -1317,6 +1317,19 @@ _bfd_aarch64_elf_link_setup_gnu_properties (struct bfd_link_info *info)
 	prop->pr_kind = property_remove;
       else
 	prop->pr_kind = property_number;
+
+      if (outprop & GNU_PROPERTY_AARCH64_FEATURE_1_GCS)
+	{
+	  elf_property *gcs_mode_prop
+	    = _bfd_elf_get_property (res.pbfd,
+				     GNU_PROPERTY_AARCH64_GCS_MODE,
+				     4);
+	  gcs_mode_prop->u.number |= tdata->gnu_property_aarch64_gcs_mode;
+	  if (gcs_mode_prop->u.number == GCS_MODE_NONE)
+	    gcs_mode_prop->pr_kind = property_remove;
+	  else
+	    gcs_mode_prop->pr_kind = property_number;
+	}
     }
 
   /* Set up generic GNU properties, and merge them with the backend-specific
@@ -1446,6 +1459,10 @@ _bfd_aarch64_elf_merge_gnu_properties (struct bfd_link_info *info
 	    updated = true;
 	  }
       }
+      break;
+
+    case GNU_PROPERTY_AARCH64_GCS_MODE:
+      /* Ignore.  */
       break;
 
     default:

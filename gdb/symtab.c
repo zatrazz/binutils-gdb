@@ -4724,6 +4724,21 @@ global_symbol_searcher::is_suitable_msymbol
 /* See symtab.h.  */
 
 bool
+global_symbol_searcher::scope_filter_matches (const char *name) const
+{
+  if (m_scope_filter == nullptr)
+    return true;
+
+  const std::string_view full_name (name);
+  const size_t sep = full_name.find ("::");
+
+  return (sep != std::string_view::npos
+	  && m_scope_filter->contains (full_name.substr (0, sep)));
+}
+
+/* See symtab.h.  */
+
+bool
 global_symbol_searcher::expand_symtabs
 	(objfile *objfile, const std::optional<compiled_regex> &preg) const
 {
@@ -4743,8 +4758,9 @@ global_symbol_searcher::expand_symtabs
      &lookup_name_info::match_any (),
      [&] (const char *symname)
      {
-       return (!preg.has_value ()
-	       || preg->exec (symname, 0, NULL, 0) == 0);
+       return ((!preg.has_value ()
+		|| preg->exec (symname, 0, NULL, 0) == 0)
+	       && scope_filter_matches (symname));
      },
      NULL,
      SEARCH_GLOBAL_BLOCK | SEARCH_STATIC_BLOCK,
@@ -4775,9 +4791,10 @@ global_symbol_searcher::expand_symtabs
 
 	  if (is_suitable_msymbol (kind, msymbol))
 	    {
-	      if (!preg.has_value ()
-		  || preg->exec (msymbol->natural_name (), 0,
-				 NULL, 0) == 0)
+	      if ((!preg.has_value ()
+		   || preg->exec (msymbol->natural_name (), 0,
+				  NULL, 0) == 0)
+		  && scope_filter_matches (msymbol->natural_name ()))
 		{
 		  /* An important side-effect of this lookup function is
 		     to expand the symbol table if msymbol is found, later
@@ -4839,6 +4856,9 @@ global_symbol_searcher::add_matching_symbols
 						   nullptr, 0) != 0)
 		continue;
 
+	      if (!scope_filter_matches (sym->natural_name ()))
+		continue;
+
 	      if (((sym->domain () == VAR_DOMAIN
 		    || sym->domain () == FUNCTION_DOMAIN)
 		   && treg.has_value ()
@@ -4893,9 +4913,10 @@ global_symbol_searcher::add_matching_msymbols
 
       if (is_suitable_msymbol (kind, msymbol))
 	{
-	  if (!preg.has_value ()
-	      || preg->exec (msymbol->natural_name (), 0,
-			     NULL, 0) == 0)
+	  if ((!preg.has_value ()
+	       || preg->exec (msymbol->natural_name (), 0,
+			      NULL, 0) == 0)
+	      && scope_filter_matches (msymbol->natural_name ()))
 	    {
 	      /* For functions we can do a quick check of whether the
 		 symbol might be found via find_pc_symtab.  */
@@ -6663,12 +6684,24 @@ search_module_symbols (const char *module_regexp, const char *regexp,
   spec1.set_exclude_minsyms (true);
   std::vector<symbol_search> modules = spec1.search ();
 
+  if (modules.empty ())
+    return results;
+
   /* Now search for all symbols of the required KIND matching the required
      regular expressions.  We figure out which ones are in which modules
-     below.  */
+     below.
+
+     Only symbols of the modules found above can be part of the result,
+     so restrict the search to them.  This avoids expanding the symtabs of
+     every other module.  */
+  gdb::unordered_set<std::string_view> module_names;
+  for (const symbol_search &p : modules)
+    module_names.insert (p.symbol->print_name ());
+
   global_symbol_searcher spec2 (kind, regexp);
   spec2.set_symbol_type_regexp (type_regexp);
   spec2.set_exclude_minsyms (true);
+  spec2.set_scope_filter (&module_names);
   std::vector<symbol_search> symbols = spec2.search ();
 
   /* Now iterate over all MODULES, checking to see which items from

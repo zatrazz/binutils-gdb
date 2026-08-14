@@ -30,6 +30,7 @@
 #include "gdbsupport/gdb_regex.h"
 #include "gdbsupport/enum-flags.h"
 #include "gdbsupport/function-view.h"
+#include "gdbsupport/unordered_set.h"
 #include "gdbsupport/iteration-status.h"
 #include <optional>
 #include <string_view>
@@ -2619,6 +2620,14 @@ public:
     m_max_search_results = max_search_results;
   }
 
+  /* Only consider symbols whose name is qualified by one of SCOPES, that
+     is, starts with one of them followed by "::".  SCOPES must outlive
+     the search.  */
+  void set_scope_filter (const gdb::unordered_set<std::string_view> *scopes)
+  {
+    m_scope_filter = scopes;
+  }
+
   /* Search the symbols from all objfiles in the current program space
      looking for matches as defined by the current state of this object.
 
@@ -2657,6 +2666,13 @@ private:
   /* Maximum number of search results.  We currently impose a hard limit
      of SIZE_MAX, there is no "unlimited".  */
   size_t m_max_search_results = SIZE_MAX;
+
+  /* If not nullptr, the scopes symbol names must be qualified by, see
+     set_scope_filter.  */
+  const gdb::unordered_set<std::string_view> *m_scope_filter = nullptr;
+
+  /* Return true if NAME passes M_SCOPE_FILTER.  */
+  bool scope_filter_matches (const char *name) const;
 
   /* Expand symtabs in OBJFILE that match PREG, are of type M_KIND.  Return
      true if any msymbols were seen that we should later consider adding to
